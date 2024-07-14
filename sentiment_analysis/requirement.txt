@@ -1,0 +1,6 @@
+tweepy
+mysql-connector-python
+nltk
+scikit-learn
+pandas
+pickle-mixin
