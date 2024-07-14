@@ -1,1 +1,1 @@
-#  Twitter rsentiment-analysis-nlp
+#  Twitter sentiment-analysis-nlp
