@@ -17,30 +17,48 @@ A machine learning pipeline that classifies tweet sentiment (positive, negative,
 - Matplotlib
 
 ## Folder Structure
+
 sentiment_analysis/
+
 ├── data/ # Tweet dataset
+
 ├── database/ # Database files
+
 ├── src/
+
 │ ├── data_collection.py
+
 │ ├── export_for_tableau.py
+
 │ ├── model_training.py
+
 │ ├── preprocessing.py
+
 │ └── sentiment_classification.py
 
-## How to Run
+# How to Run
 
-### 1. Preprocess the data
-```bash
+1. Preprocess the data
+
 python src/preprocessing.py
-2. collect data
+ 
+ 2. collect data
+
 python src/data_collection.py
-3. Train the model
+ 
+ 3. Train the model
+
 python src/model_training.py
-4. Run sentiment classification
+ 
+ 4. Run sentiment classification
+
 python src/sentiment_classification.py
-5. Export results for Tableau dashboard
+
+ 5. Export results for Tableau dashboard
+
 python src/export_for_tableau.py
-My Contribution
+
+ # My Contribution
 
 Implemented preprocessing pipeline
 
