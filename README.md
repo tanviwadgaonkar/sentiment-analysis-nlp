@@ -1,69 +1,99 @@
-# Sentiment Analysis on Twitter Data
+# Tweet Sentiment Analysis
 
-A machine learning pipeline that classifies tweet sentiment (positive, negative, neutral) using NLP techniques and classical ML models.
+[![CI](https://github.com/tanviwadgaonkar/sentiment-analysis-nlp/actions/workflows/ci.yml/badge.svg)](https://github.com/tanviwadgaonkar/sentiment-analysis-nlp/actions/workflows/ci.yml)
 
-## Features
-- Collects and stores tweet data  
-- Text cleaning (lowercasing, stopword removal, punctuation removal)  
-- Tokenization and TF-IDF feature extraction  
-- Model training and evaluation  
-- Export of results for visualization (Tableau)
+Classifies tweets as **negative / neutral / positive** with classical NLP (TF-IDF n-grams + linear models), trained and evaluated on the public **TweetEval** sentiment benchmark (SemEval-2017 Task 4A), and runs the model over your own tweets: import or collect them into a database, classify, export for Tableau.
 
-## Tech Stack
-- Python  
-- NumPy, Pandas  
-- scikit-learn  
-- NLTK  
-- Matplotlib
+```
+                 ┌──────────── offline benchmark ────────────┐
+TweetEval ──download (SHA-256 checked)──> train / val / test splits
+                                               │
+             preprocess -> word 1-2g + char 2-5g TF-IDF -> {NB, LogReg, LinearSVM}
+                                               │  select on validation macro-recall
+                                               ▼
+                                 models/sentiment_model.joblib  (one sklearn Pipeline)
+                                               │
+ CSV / X API v2 ──import/collect──> tweets DB ──classify──> sentiment + confidence ──export──> CSV (Tableau)
+ (SQLite by default, MySQL via DATABASE_URL)
+```
 
-## Folder Structure
+## Results
 
-sentiment_analysis/
+TweetEval sentiment, official splits: 45,615 train / 2,000 validation / 12,284 test tweets. The model is chosen on **validation**; test is scored once. Macro-averaged recall is the official SemEval-2017 metric.
 
-├── data/ # Tweet dataset
+| Model | Val macro-recall | Test macro-recall | Test macro-F1 | Test accuracy |
+|---|---|---|---|---|
+| Naive Bayes, word TF-IDF (the original design) | 0.588 | 0.579 | 0.566 | 0.572 |
+| **Logistic regression, word + char TF-IDF** ✅ | **0.694** | **0.629** | **0.620** | **0.623** |
+| Linear SVM, word + char TF-IDF | 0.685 | 0.629 | 0.622 | 0.627 |
 
-├── database/ # Database files
+Per class (selected model, test): negative F1 0.624 · neutral F1 0.631 · positive F1 0.606.
 
-├── src/
+Reproduce: `python -m sentiment download && python -m sentiment train` (≈2 minutes on a laptop CPU; CI re-runs it on every push). Numbers are from scikit-learn 1.9.1.
 
-│ ├── data_collection.py
+**Reading these numbers honestly.** This is a strong *classical* baseline, in line with the linear baselines reported in the TweetEval paper (Barbieri et al., 2020); fine-tuned transformers score substantially higher on the same split. The validation→test drop (0.69 → 0.63) is expected on this benchmark: the SemEval-2017 test tweets were collected later than the training data, so topics and vocabulary shift.
 
-│ ├── export_for_tableau.py
+### Where it fails
 
-│ ├── model_training.py
+From `python -m sentiment predict` with the trained model:
 
-│ ├── preprocessing.py
+| Tweet | Predicted |
+|---|---|
+| I don't like this at all | negative (0.96) ✅ |
+| best day ever!!! | positive (1.00) ✅ |
+| this is not bad actually | **negative** (0.99) ❌ — "bad" outweighs the negation |
+| the bus leaves at 5 | **negative** (0.66) ❌ — short factual tweets get little signal |
 
-│ └── sentiment_classification.py
+Bag-of-n-grams models can't compose meaning ("not" + "bad"), which is the main argument for a transformer upgrade.
 
-# How to Run
+## Quick start
 
-1. Preprocess the data
+```bash
+pip install -r requirements.txt
 
-python src/preprocessing.py
- 
- 2. collect data
+python -m sentiment download                 # TweetEval -> data/tweeteval/
+python -m sentiment train                    # -> models/sentiment_model.joblib + metrics.json
+python -m sentiment predict "I love this!" "worst day ever"
 
-python src/data_collection.py
- 
- 3. Train the model
+python -m sentiment import-csv data/sample_tweets.csv   # into sqlite:///tweets.db
+python -m sentiment classify
+python -m sentiment export tweets_with_sentiment.csv    # open in Tableau
+```
 
-python src/model_training.py
- 
- 4. Run sentiment classification
+Live collection (needs an X API plan with recent search): `TWITTER_BEARER_TOKEN=... python -m sentiment collect "coffee" --limit 200`. MySQL instead of SQLite: `pip install mysql-connector-python` and `DATABASE_URL=mysql+mysqlconnector://user:pw@host/db`. `data/sample_tweets.csv` holds five made-up example tweets for trying the flow.
 
-python src/sentiment_classification.py
+## Tests
 
- 5. Export results for Tableau dashboard
+```bash
+pip install -r requirements-dev.txt
+pytest -q        # 18 tests, ~5 s, no downloads
+```
 
-python src/export_for_tableau.py
+Preprocessing rules (negations kept, URL/user placeholders, elongation), data loading and checksum verification, model selection and the saved pipeline on a tiny generated dataset, database import/dedupe/export, X API pagination with a fake client, and the full CLI flow.
 
- # My Contribution
+## Design decisions
 
-Implemented preprocessing pipeline
+- **Negations are never removed.** The original pipeline stripped NLTK's English stopwords — which include *not*, *no*, *don't* — turning "not good" into "good". No words are removed now; TF-IDF already down-weights uninformative ones.
+- **Word + character n-grams.** Word bigrams capture short phrases; character 2–5-grams (within words) are robust to misspellings, elongations ("sooo"), and hashtags, without NLTK stemmers or runtime corpus downloads.
+- **One artifact.** Preprocessing, vectoriser and classifier are a single scikit-learn `Pipeline`, so a model can never be paired with the wrong vectoriser.
+- **Labelled data first.** The original code trained on rows `WHERE sentiment IS NOT NULL`, but sentiment was only ever written by the classifier, so it could never train. The model now learns from a public labelled benchmark and is then applied to your unlabelled tweets.
+- **Explicit export columns.** The old export named the columns of `SELECT *` positionally, in a different order from the table definition, mislabelling them.
+- **Secrets from the environment.** Database URL and API token come from env vars, not a committed `config.json`.
 
-Trained ML models and evaluated performance
+## Layout
 
-Built sentiment classification script
+```
+sentiment/
+  preprocessing.py  tweet normalisation
+  data.py           TweetEval download (checksummed) and loading
+  model.py          candidate pipelines, validation-based selection, metrics
+  storage.py        SQLAlchemy table: SQLite / MySQL
+  collect.py        CSV import, X API v2 recent search
+  __main__.py       CLI
+tests/              pytest suite
+data/sample_tweets.csv
+```
 
-Exported results to Tableau for visualization and analysis
+## Data and licence
+
+TweetEval is downloaded from its [repository](https://github.com/cardiffnlp/tweeteval) at run time and not redistributed here; see the TweetEval and SemEval-2017 Task 4 licences and X's terms. Citation: Barbieri, Camacho-Collados, Espinosa-Anke, Neves. *TweetEval: Unified Benchmark and Comparative Evaluation for Tweet Classification.* Findings of EMNLP 2020.
