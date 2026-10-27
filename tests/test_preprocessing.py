@@ -20,6 +20,10 @@ def test_elongation_is_capped_not_removed():
     assert preprocess_text("sooooo goooood") == "soo good"
 
 
+def test_numbers_are_not_treated_as_elongations():
+    assert preprocess_text("1000 likes, 777 days") == "1000 likes, 777 days"
+
+
 def test_html_entities_and_emoji():
     assert preprocess_text("fish &amp; chips 😍") == "fish & chips 😍"
 

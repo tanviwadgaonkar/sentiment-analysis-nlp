@@ -73,7 +73,7 @@ Live collection (needs an X API plan with recent search): `TWITTER_BEARER_TOKEN=
 
 ```bash
 pip install -r requirements-dev.txt
-pytest -q        # 18 tests, ~5 s, no downloads
+pytest -q        # 19 tests, ~5 s, no downloads
 ```
 
 Preprocessing rules (negations kept, URL/user placeholders, elongation), data loading and checksum verification, model selection and the saved pipeline on a tiny generated dataset, database import/dedupe/export, X API pagination with a fake client, and the full CLI flow.

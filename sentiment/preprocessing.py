@@ -23,7 +23,8 @@ import re
 _URL = re.compile(r"https?://\S+|www\.\S+")
 _USER = re.compile(r"@\w+")
 _HASHTAG = re.compile(r"#(\w+)")
-_ELONGATED = re.compile(r"(\w)\1{2,}")
+# Letters only: "1000" and "777" are numbers, not elongations.
+_ELONGATED = re.compile(r"([^\W\d_])\1{2,}")
 _WS = re.compile(r"\s+")
 
 
