@@ -46,6 +46,13 @@ From `python -m sentiment predict` with the trained model:
 
 Bag-of-n-grams models can't compose meaning ("not" + "bad"), which is the main argument for a transformer upgrade.
 
+## Known limitations and future work
+
+- **No compositional meaning:** bag-of-n-grams can't model "not bad" (see the table above). The next step is a measured negation-scope feature, then a small fine-tuned transformer such as DistilRoBERTa, compared on the same validation split.
+- **Domain shift:** trained on 2013–2017 SemEval tweets; slang, topics and emoji use drift, so expect lower accuracy on current posts.
+- **Confidence isn't calibrated:** for the linear SVM it's a softmax over decision scores, and even logistic regression probabilities aren't checked for calibration. Treat it as a ranking signal.
+- **Deployment:** this is a batch CLI (import → classify → export), not a web service; no hosted demo.
+
 ## Quick start
 
 ```bash
