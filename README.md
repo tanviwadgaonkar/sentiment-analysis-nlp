@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/tanviwadgaonkar/sentiment-analysis-nlp/actions/workflows/ci.yml/badge.svg)](https://github.com/tanviwadgaonkar/sentiment-analysis-nlp/actions/workflows/ci.yml)
 
+**Status:** implemented and tested (19 tests). Trained and evaluated on the real TweetEval benchmark in CI. The X API collector is tested only with a fake client (no live API calls). Not deployed.
+
 Classifies tweets as **negative / neutral / positive** with classical NLP (TF-IDF n-grams + linear models), trained and evaluated on the public **TweetEval** sentiment benchmark (SemEval-2017 Task 4A), and runs the model over your own tweets: import or collect them into a database, classify, export for Tableau.
 
 ```
