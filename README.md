@@ -31,7 +31,7 @@ Per class (selected model, test): negative F1 0.624 · neutral F1 0.630 · posit
 
 Reproduce: `python -m sentiment download && python -m sentiment train` (≈2 minutes on a laptop CPU; CI re-runs it on every push). Numbers are from scikit-learn 1.9.1.
 
-**Reading these numbers honestly.** This is a strong *classical* baseline, in line with the linear baselines reported in the TweetEval paper (Barbieri et al., 2020); fine-tuned transformers score substantially higher on the same split. The validation→test drop (0.69 → 0.63) is expected on this benchmark: the SemEval-2017 test tweets were collected later than the training data, so topics and vocabulary shift.
+**Reading these numbers honestly.** This is a strong *classical* baseline, in line with the linear baselines reported in the TweetEval paper (Barbieri et al., 2020); fine-tuned transformers score substantially higher on the same split. The validation→test drop (0.69 → 0.63) is large; a likely cause (not measured here) is that the SemEval-2017 test tweets were collected later than the training data, so topics and vocabulary differ.
 
 ### Where it fails
 
