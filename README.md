@@ -24,10 +24,10 @@ TweetEval sentiment, official splits: 45,615 train / 2,000 validation / 12,284 t
 | Model | Val macro-recall | Test macro-recall | Test macro-F1 | Test accuracy |
 |---|---|---|---|---|
 | Naive Bayes, word TF-IDF (the original design) | 0.588 | 0.579 | 0.566 | 0.572 |
-| **Logistic regression, word + char TF-IDF** ✅ | **0.694** | **0.629** | **0.620** | **0.623** |
-| Linear SVM, word + char TF-IDF | 0.685 | 0.629 | 0.622 | 0.627 |
+| **Logistic regression, word + char TF-IDF** ✅ | **0.692** | **0.629** | **0.620** | **0.623** |
+| Linear SVM, word + char TF-IDF | 0.687 | 0.629 | 0.622 | 0.627 |
 
-Per class (selected model, test): negative F1 0.624 · neutral F1 0.631 · positive F1 0.606.
+Per class (selected model, test): negative F1 0.624 · neutral F1 0.630 · positive F1 0.606.
 
 Reproduce: `python -m sentiment download && python -m sentiment train` (≈2 minutes on a laptop CPU; CI re-runs it on every push). Numbers are from scikit-learn 1.9.1.
 
